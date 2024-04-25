@@ -16,7 +16,7 @@ The package is not available on the registry. Please clone the repository and
 add it as a [local package](https://pkgdocs.julialang.org/v1/managing-packages/#Adding-a-local-package). You also need to add [JuMP](https://jump.dev/JuMP.jl/stable/) and [Gurobi](https://github.com/jump-dev/Gurobi.jl).
 
 ```julia
-]add https://github.com/mxmmargarida/NormalGames.jl.git
+]add https://github.com/mxmmargarida/Normal-form-games.git
 ```
 
 ## Basic Usage
@@ -35,7 +35,7 @@ Load the module:
 using NormalGames
 ```
 
-You may need to do the command below if an error is raised
+If the above raises an error, it may mean that you need to run the commands below to install recorded dependencies
 ```julia
 using Pkg
 Pkg.instantiate()
