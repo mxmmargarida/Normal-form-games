@@ -324,6 +324,102 @@ function All_NE(my_game, method = 1)
 end
 
 """
+    NashEquilibriaPNS(my_game)
+
+    Method using the enumeration procedure by Porter et al. (2008)
+    This has options to compute all equilibria or stop when one is found, to compute only pure equilibria, and to run until a certain time limit is achieved.
+"""
+function NashEquilibriaPNS(my_game,all_NE = true, just_pure =false, time_limit = false, time_stop = 60)
+    if just_pure
+        supp_size = collect(product(ntuple(i -> 1:1, my_game.n)...))
+    else
+        supp_size = collect(product(ntuple(i -> 1:my_game.strat[i], my_game.n)...))
+    end
+    ### sort support sizes: flatten supp_size before sorting
+    sorted_indices = sort(supp_size[:], by=t -> (sum(t), max_abs_diff(t)))
+    ### solve feasibility problem for each assignment of strategies for the support size
+    # list of expected utilities for each Nash equilibrium
+    NE_u = []
+    # list of Nash equilibria
+    NE_mixed = []
+    stop_enumeration = false
+    start_time = time()
+    total_time = @elapsed begin
+        for s in sorted_indices
+            # all supports of size s[i]
+            combinations_per_dimension = [Combinatorics.combinations(1:my_game.strat[i], s[i]) for i in 1:my_game.n]
+            combined_combinations = collect(Iterators.product(combinations_per_dimension...))
+            for supp in combined_combinations
+                OPT, U_opt, xOpt = FeasibilityProgram(my_game,supp)
+                # if there is an equilibrium it must be added
+                if OPT !="NaN"
+                    push!(NE_u,U_opt)
+                    push!(NE_mixed,xOpt)
+                    if all_NE==false
+                        stop_enumeration = true
+                        break
+                    end
+                end
+                # if we use a time limit than, when we go over it, we must stop
+                if time_limit && time()-start_time > time_stop
+                    return "TL", NE_u, NE_mixed
+                end
+            end
+            if stop_enumeration
+                break
+            end
+        end
+    end
+    return total_time, NE_u, NE_mixed
+end
+
+# function used on the sorting of the support sizes
+max_abs_diff = t -> maximum(abs(t[i] - t[j]) for i in 1:length(t) for j in i+1:length(t))
+
+# auxiliar function for the PNS method
+function FeasibilityProgram(my_game,supp)
+    model = Model(Gurobi.Optimizer)
+    set_silent(model)
+    set_time_limit_sec(model, 300.0)
+    MOI.set(model, MOI.NumberOfThreads(), 1)
+
+    # Variables
+    # define probability distribution for each player
+    x = [@variable(model, [1:my_game.strat[i]], lower_bound = 0.0, upper_bound = 1.0) for i = 1:my_game.n]
+    # define expected utility value for each player
+    @variable(model, v[i = 1:my_game.n])
+
+    # Constraints
+    for p in 1:my_game.n
+        # add probability distribution constraint
+        @constraint(model, sum(x[p]) == 1)
+        for j in 1:my_game.strat[p]
+            if j in supp[p]
+                @constraint(model, v[p] == sum(my_game.polymatrix[(p,i)][j,:]'*x[i] for i in 1:my_game.n))
+            else
+                @constraint(model, v[p] >= sum(my_game.polymatrix[(p,i)][j,:]'*x[i] for i in 1:my_game.n))
+                @constraint(model, x[p][j] == 0)
+            end
+        end
+    end
+    
+    # Objective function
+    @objective(model, Max, sum(v))
+
+    # Solve model
+    optimize!(model)
+
+    # Solution
+    if termination_status(model) == MOI.OPTIMAL && primal_status(model) == MOI.FEASIBLE_POINT
+        # println("Model is solved and feasible and solving time is ",solve_time(model))
+        return objective_value(model), value.(v), [value.(x[p]) for p in 1:my_game.n]
+    else
+        # println("Model is not solved and/or not feasible.")
+        return "NaN","NaN","NaN"
+    end
+end
+
+"""
     NashEquilibria3(my_game)
 
     Method using by Sandholm et al. (2005) extended to polymatrix games: Formulation 2
@@ -557,10 +653,6 @@ function NashEquilibria5(my_game)
     end
 end
 
-function NashEquilibriaPNS(my_game)
-end
-
-
 """
     CorrelatedEquilibria(my_game)
 
@@ -576,7 +668,7 @@ function CorrelatedEquilibria(my_game,supp = [])
     MOI.set(model, MOI.NumberOfThreads(), 1)
 
     # Variables
-    # define probability distribution for each player
+    # define probability distribution over all combinations of strategies
     indices = collect(product(ntuple(i -> 1:my_game.strat[i], length(my_game.strat))...)) # Cartesian product
     @variable(model, tau[indices], lower_bound = 0.0, upper_bound = 1.0)
 
