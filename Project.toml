@@ -11,7 +11,3 @@ IterTools = "c8e1da08-722c-5040-9ed9-7db0dc04731e"
 JSON = "682c06a0-de6a-54ab-a142-c8b1cf79cde6"
 JuMP = "4076af6c-e467-56ae-b986-b466b2749572"
 Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
-SCIP = "82193955-e24f-5292-bf16-6f2c5261a85f"
-
-[compat]
-SCIP = "0.12.3"

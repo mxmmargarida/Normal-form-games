@@ -10,11 +10,11 @@ function has_negative_entry(PolyMatrix::Dict{Tuple{Int, Int}, Matrix{Float64}})
 end
 
 """
-    NashEquilibria(my_game,model="NaN",supp=[],y=[],v=[],x=[])
+    NashEquilibria(my_game,Optimizer,model="NaN",supp=[],y=[],v=[],x=[])
 
     Method using indicator constraints
 """
-function NashEquilibria(my_game,model="NaN",supp=[],y=[],v=[],x=[])
+function NashEquilibria(my_game,Optimizer,model="NaN",supp=[],y=[],v=[],x=[])
     if has_negative_entry(my_game.polymatrix)
         throw(ArgumentError("A polymatrix game must have no negative entries. A pre-processing is necessary"))
     end
@@ -22,7 +22,7 @@ function NashEquilibria(my_game,model="NaN",supp=[],y=[],v=[],x=[])
         @constraint(model, sum(sum(1-y[p][j] for j in 1:my_game.strat[p] if supp[p][j]>=0.5)+sum(y[p][j] for j in 1:my_game.strat[p] if supp[p][j]<0.5) for p in 1:my_game.n)>=1) 
     else
         # start model
-        model = Model(SCIP.Optimizer)
+        model = Model(Optimizer)
 
         set_silent(model)
         set_time_limit_sec(model, 300.0)
@@ -67,12 +67,12 @@ function NashEquilibria(my_game,model="NaN",supp=[],y=[],v=[],x=[])
     end
 end
 
-function NashEquilibria_CallBack(my_game)
+function NashEquilibria_CallBack(my_game,Optimizer)
     if has_negative_entry(my_game.polymatrix)
         throw(ArgumentError("A polymatrix game must have no negative entries. A pre-processing is necessary"))
     end
     # start model
-    model = Model(SCIP.Optimizer)
+    model = Model(Optimizer)
     model[:callback_time] = 0.
     model[:callback_calls] = 0.
     model[:NE_mixed] = []
@@ -138,11 +138,11 @@ function no_good_cut_callback(cb_data,x,y,v,model,my_game)
 end
 
 """
-    NashEquilibria2(my_game,model="NaN",supp=[],y=[],v=[],x=[])
+    NashEquilibria2(my_game,Optimizer,model="NaN",supp=[],y=[],v=[],x=[])
 
     Method using by Sandholm et al. (2005) extended to polymatrix games: Formulation 1
 """
-function NashEquilibria2(my_game,model="NaN",supp=[],y=[],v=[],x=[])
+function NashEquilibria2(my_game,Optimizer,model="NaN",supp=[],y=[],v=[],x=[])
     if has_negative_entry(my_game.polymatrix)
         throw(ArgumentError("A polymatrix game must have no negative entries. A pre-processing is necessary"))
     end
@@ -150,7 +150,7 @@ function NashEquilibria2(my_game,model="NaN",supp=[],y=[],v=[],x=[])
         @constraint(model, sum(sum(1-y[p][j] for j in 1:my_game.strat[p] if supp[p][j]>=0.5)+sum(y[p][j] for j in 1:my_game.strat[p] if supp[p][j]<0.5) for p in 1:my_game.n)>=1) 
     else
         # start model
-        model = Model(SCIP.Optimizer)
+        model = Model(Optimizer)
 
         set_silent(model)
         set_time_limit_sec(model, 300.0)
@@ -214,12 +214,12 @@ function NashEquilibria2(my_game,model="NaN",supp=[],y=[],v=[],x=[])
     end
 end
 
-function NashEquilibria_CallBack2(my_game,model="NaN",supp=[],y=[],v=[],x=[])
+function NashEquilibria_CallBack2(my_game,Optimizer,model="NaN",supp=[],y=[],v=[],x=[])
     if has_negative_entry(my_game.polymatrix)
         throw(ArgumentError("A polymatrix game must have no negative entries. A pre-processing is necessary"))
     end
     # start model
-    model = Model(SCIP.Optimizer)
+    model = Model(Optimizer)
     model[:callback_time] = 0.
     model[:callback_calls] = 0.
     model[:NE_mixed] = []
@@ -289,22 +289,22 @@ function NashEquilibria_CallBack2(my_game,model="NaN",supp=[],y=[],v=[],x=[])
     end
 end
 
-function All_NE(my_game, method = 1)
+function All_NE(my_game, Optimizer, method = 1)
     NE_mixed = []
     NE_u = []
     count_NE = 0
     total_time = 0
     if method == 1
         total_time += @elapsed begin
-            OPT, utilities, mixed, supp, m, y_var, v_var, x_var = NashEquilibria(my_game)
+            OPT, utilities, mixed, supp, m, y_var, v_var, x_var = NashEquilibria(my_game,Optimizer)
         end
     elseif method == "callback 1"
-        return NashEquilibria_CallBack(my_game)
+        return NashEquilibria_CallBack(my_game,Optimizer)
     elseif method == "callback 2"
-        return NashEquilibria_CallBack2(my_game)
+        return NashEquilibria_CallBack2(my_game,Optimizer)
     else
         total_time += @elapsed begin
-            OPT, utilities, mixed, supp, m, y_var, v_var, x_var = NashEquilibria2(my_game)
+            OPT, utilities, mixed, supp, m, y_var, v_var, x_var = NashEquilibria2(my_game,Optimizer)
         end
     end
     total_time += @elapsed begin
@@ -313,10 +313,10 @@ function All_NE(my_game, method = 1)
             push!(NE_mixed,mixed)
             push!(NE_u,utilities)
             if method == 1
-                OPT, utilities, mixed, supp, m, y_var = NashEquilibria(my_game,m,supp,y_var, v_var, x_var)
+                OPT, utilities, mixed, supp, m, y_var = NashEquilibria(my_game,Optimizer,m,supp,y_var, v_var, x_var)
             # elseif method == 2
             else
-                OPT, utilities, mixed, supp, m, y_var = NashEquilibria2(my_game,m,supp,y_var, v_var, x_var)
+                OPT, utilities, mixed, supp, m, y_var = NashEquilibria2(my_game,Optimizer,m,supp,y_var, v_var, x_var)
             end
         end
     end
@@ -329,7 +329,7 @@ end
     Method using the enumeration procedure by Porter et al. (2008)
     This has options to compute all equilibria or stop when one is found, to compute only pure equilibria, and to run until a certain time limit is achieved.
 """
-function NashEquilibriaPNS(my_game,all_NE = true, just_pure =false, time_limit = false, time_stop = 60)
+function NashEquilibriaPNS(my_game,Optimizer,all_NE = true, just_pure =false, time_limit = false, time_stop = 60)
     if just_pure
         supp_size = collect(product(ntuple(i -> 1:1, my_game.n)...))
     else
@@ -350,7 +350,7 @@ function NashEquilibriaPNS(my_game,all_NE = true, just_pure =false, time_limit =
             combinations_per_dimension = [Combinatorics.combinations(1:my_game.strat[i], s[i]) for i in 1:my_game.n]
             combined_combinations = collect(Iterators.product(combinations_per_dimension...))
             for supp in combined_combinations
-                OPT, U_opt, xOpt = FeasibilityProgram(my_game,supp)
+                OPT, U_opt, xOpt = FeasibilityProgram(my_game, supp, Optimizer)
                 # if there is an equilibrium it must be added
                 if OPT !="NaN"
                     push!(NE_u,U_opt)
@@ -377,8 +377,8 @@ end
 max_abs_diff = t -> maximum(abs(t[i] - t[j]) for i in 1:length(t) for j in i+1:length(t))
 
 # auxiliar function for the PNS method
-function FeasibilityProgram(my_game,supp)
-    model = Model(SCIP.Optimizer)
+function FeasibilityProgram(my_game,supp,Optimizer)
+    model = Model(Optimizer)
     set_silent(model)
     set_time_limit_sec(model, 300.0)
     # MOI.set(model, MOI.NumberOfThreads(), 1)
@@ -420,17 +420,17 @@ function FeasibilityProgram(my_game,supp)
 end
 
 """
-    NashEquilibria3(my_game)
+    NashEquilibria3(my_game,Optimizer)
 
     Method using by Sandholm et al. (2005) extended to polymatrix games: Formulation 2
     This method cannot be used to compute multiple equilibria as its feasible region contains non-equilibrium solutions
 """
-function NashEquilibria3(my_game)
+function NashEquilibria3(my_game,Optimizer)
     if has_negative_entry(my_game.polymatrix)
         throw(ArgumentError("A polymatrix game must have no negative entries. A pre-processing is necessary"))
     end
     # start model
-    model = Model(SCIP.Optimizer)
+    model = Model(Optimizer)
 
     set_silent(model)
     set_time_limit_sec(model, 300.0)
@@ -497,17 +497,17 @@ function NashEquilibria3(my_game)
 end
 
 """
-    NashEquilibria4(my_game)
+    NashEquilibria4(my_game,Optimizer)
 
     Method using by Sandholm et al. (2005) extended to polymatrix games: Formulation 3
     This method cannot be used to compute multiple equilibria as its feasible region contains non-equilibrium solutions
 """
-function NashEquilibria4(my_game)
+function NashEquilibria4(my_game,Optimizer)
     if has_negative_entry(my_game.polymatrix)
         throw(ArgumentError("A polymatrix game must have no negative entries. A pre-processing is necessary"))
     end
     # start model
-    model = Model(SCIP.Optimizer)
+    model = Model(Optimizer)
 
     set_silent(model)
     set_time_limit_sec(model, 300.0)
@@ -574,17 +574,17 @@ function NashEquilibria4(my_game)
 end
 
 """
-    NashEquilibria5(my_game)
+    NashEquilibria5(my_game,Optimizer)
 
     Method using by Sandholm et al. (2005) extended to polymatrix games: Formulation 4
     This method cannot be used to compute multiple equilibria as its feasible region contains non-equilibrium solutions
 """
-function NashEquilibria5(my_game)
+function NashEquilibria5(my_game,Optimizer)
     if has_negative_entry(my_game.polymatrix)
         throw(ArgumentError("A polymatrix game must have no negative entries. A pre-processing is necessary"))
     end
     # start model
-    model = Model(SCIP.Optimizer)
+    model = Model(Optimizer)
 
     set_silent(model)
     set_time_limit_sec(model, 300.0)
@@ -654,14 +654,14 @@ function NashEquilibria5(my_game)
 end
 
 """
-    CorrelatedEquilibria(my_game)
+    CorrelatedEquilibria(my_game,Optimizer)
 
     Method using to compute correlated equilibria. It just solves a linear program
 """
-function CorrelatedEquilibria(my_game,supp = [])
+function CorrelatedEquilibria(my_game,Optimizer,supp = [])
     # supp: find CE restricted to a given support
     # start model
-    model = Model(SCIP.Optimizer)
+    model = Model(Optimizer)
 
     set_silent(model)
     set_time_limit_sec(model, 300.0)
@@ -744,9 +744,9 @@ end
 # With correlated equilibria, we can only compute 1. If we want to compute all, then we need to find a constraint that allow us to have y=1 if and only if tau>0. It is not obvious how to do it.
 # Below is a tentative code (some error in the callback), but it is not correct due to the lack of the condition above.
 
-# function CorrelatedEquilibria_CallBack(my_game)
+# function CorrelatedEquilibria_CallBack(my_game,Optimizer)
 #     # start model
-#     model = Model(SCIP.Optimizer)
+#     model = Model(Optimizer)
 #     model[:callback_time] = 0.
 #     model[:callback_calls] = 0.
 #     model[:CE_mixed] = [] 
