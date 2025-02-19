@@ -22,7 +22,7 @@ function NashEquilibria(my_game,model="NaN",supp=[],y=[],v=[],x=[])
         @constraint(model, sum(sum(1-y[p][j] for j in 1:my_game.strat[p] if supp[p][j]>=0.5)+sum(y[p][j] for j in 1:my_game.strat[p] if supp[p][j]<0.5) for p in 1:my_game.n)>=1) 
     else
         # start model
-        model = Model(Gurobi.Optimizer)
+        model = Model(SCIP.Optimizer)
 
         set_silent(model)
         set_time_limit_sec(model, 300.0)
@@ -72,7 +72,7 @@ function NashEquilibria_CallBack(my_game)
         throw(ArgumentError("A polymatrix game must have no negative entries. A pre-processing is necessary"))
     end
     # start model
-    model = Model(Gurobi.Optimizer)
+    model = Model(SCIP.Optimizer)
     model[:callback_time] = 0.
     model[:callback_calls] = 0.
     model[:NE_mixed] = []
@@ -150,7 +150,7 @@ function NashEquilibria2(my_game,model="NaN",supp=[],y=[],v=[],x=[])
         @constraint(model, sum(sum(1-y[p][j] for j in 1:my_game.strat[p] if supp[p][j]>=0.5)+sum(y[p][j] for j in 1:my_game.strat[p] if supp[p][j]<0.5) for p in 1:my_game.n)>=1) 
     else
         # start model
-        model = Model(Gurobi.Optimizer)
+        model = Model(SCIP.Optimizer)
 
         set_silent(model)
         set_time_limit_sec(model, 300.0)
@@ -219,7 +219,7 @@ function NashEquilibria_CallBack2(my_game,model="NaN",supp=[],y=[],v=[],x=[])
         throw(ArgumentError("A polymatrix game must have no negative entries. A pre-processing is necessary"))
     end
     # start model
-    model = Model(Gurobi.Optimizer)
+    model = Model(SCIP.Optimizer)
     model[:callback_time] = 0.
     model[:callback_calls] = 0.
     model[:NE_mixed] = []
@@ -378,10 +378,10 @@ max_abs_diff = t -> maximum(abs(t[i] - t[j]) for i in 1:length(t) for j in i+1:l
 
 # auxiliar function for the PNS method
 function FeasibilityProgram(my_game,supp)
-    model = Model(Gurobi.Optimizer)
+    model = Model(SCIP.Optimizer)
     set_silent(model)
     set_time_limit_sec(model, 300.0)
-    MOI.set(model, MOI.NumberOfThreads(), 1)
+    # MOI.set(model, MOI.NumberOfThreads(), 1)
 
     # Variables
     # define probability distribution for each player
@@ -430,7 +430,7 @@ function NashEquilibria3(my_game)
         throw(ArgumentError("A polymatrix game must have no negative entries. A pre-processing is necessary"))
     end
     # start model
-    model = Model(Gurobi.Optimizer)
+    model = Model(SCIP.Optimizer)
 
     set_silent(model)
     set_time_limit_sec(model, 300.0)
@@ -507,7 +507,7 @@ function NashEquilibria4(my_game)
         throw(ArgumentError("A polymatrix game must have no negative entries. A pre-processing is necessary"))
     end
     # start model
-    model = Model(Gurobi.Optimizer)
+    model = Model(SCIP.Optimizer)
 
     set_silent(model)
     set_time_limit_sec(model, 300.0)
@@ -584,7 +584,7 @@ function NashEquilibria5(my_game)
         throw(ArgumentError("A polymatrix game must have no negative entries. A pre-processing is necessary"))
     end
     # start model
-    model = Model(Gurobi.Optimizer)
+    model = Model(SCIP.Optimizer)
 
     set_silent(model)
     set_time_limit_sec(model, 300.0)
@@ -661,7 +661,7 @@ end
 function CorrelatedEquilibria(my_game,supp = [])
     # supp: find CE restricted to a given support
     # start model
-    model = Model(Gurobi.Optimizer)
+    model = Model(SCIP.Optimizer)
 
     set_silent(model)
     set_time_limit_sec(model, 300.0)
@@ -746,7 +746,7 @@ end
 
 # function CorrelatedEquilibria_CallBack(my_game)
 #     # start model
-#     model = Model(Gurobi.Optimizer)
+#     model = Model(SCIP.Optimizer)
 #     model[:callback_time] = 0.
 #     model[:callback_calls] = 0.
 #     model[:CE_mixed] = [] 
