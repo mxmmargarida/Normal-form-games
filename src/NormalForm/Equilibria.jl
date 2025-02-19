@@ -154,7 +154,7 @@ function NashEquilibria2(my_game,Optimizer,model="NaN",supp=[],y=[],v=[],x=[])
 
         set_silent(model)
         set_time_limit_sec(model, 300.0)
-        MOI.set(model, MOI.NumberOfThreads(), 1)
+        # MOI.set(model, MOI.NumberOfThreads(), 1)
 
         # Variables
         # define probability distribution for each player
