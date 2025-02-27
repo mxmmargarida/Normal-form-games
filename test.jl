@@ -82,7 +82,3 @@ println("CE social welfare is ", SW, " and for the NE is ", [sum(ne) for ne in N
 println("The CE with maximum social welfare is ", SW1)
 
 # Ongoing step: all functions for NE verify if the polymatrices are negative. If they are an error is given. So missing to do a preprocessing to make all entries non-negative (add it to Instances). Double check that this is not needed for CE.
-
-# The next step is to code SGM (or the RL approach from the paper shared with Goolnosh) and think how to use callbacks for computing all correlated equilibria
-
-
