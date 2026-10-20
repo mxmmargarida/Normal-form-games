@@ -1,7 +1,7 @@
 name = "NormalGames"
 uuid = "4dc104ef-1e0c-4a09-93ea-14ddc8e86204"
 authors = ["Margarida Carvalho <mxmmargarida@users.noreply.github.com>"]
-version = "0.1.0"
+version = "0.2.0"
 
 [deps]
 CSV = "336ed68f-0bac-5ca0-87d4-7b16caf5d00b"
