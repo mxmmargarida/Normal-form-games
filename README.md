@@ -74,46 +74,48 @@ loaded_game = NormalGames.read_game_from_json("Problems/MyGame.json")
 
 ### Computation of equilibria
 
+<!-- TODO: Gurobi.Optimizer can be replaced by any suitable solver in JuMP. This should be explained. -->
+
 Compute all Nash equilibria using indicator constraints and a cutting plane method (no use of lazy constraints):
 
 ```julia
 println("Indicator constraints method")
-NE_mixed1, NE_u1, total_time1, _, numb_NE1 = NormalGames.All_NE(MyGame,1)
+NE_mixed1, NE_u1, total_time1, _, numb_NE1 = NormalGames.All_NE(MyGame,Gurobi.Optimizer,1)
 ```
 
 Compute all Nash equilibria using indicator constraints and a branch-and-cut method (use of lazy constraints):
 
 ```julia
 println("Indicator constraints method with callback")
-NE_mixed_callback, NE_u_callback, total_time_callback, time_call_back, numb_call_back = NormalGames.All_NE(MyGame, "callback 1")
+NE_mixed_callback, NE_u_callback, total_time_callback, time_call_back, numb_call_back = NormalGames.All_NE(MyGame, Gurobi.Optimizer, "callback 1")
 ```
 
 Compute all Nash equilibria using Formulation 1 of \[[1](#readme-ref1)\] (Big-M formulation), and a cutting plane method (no use of lazy constraints):
 
 ```julia
 println("Formulation 1 by Sandholm et al. (2005)")
-NE_mixed2, NE_u2,  total_time2, _, numb_NE3 = NormalGames.All_NE(MyGame,2)
+NE_mixed2, NE_u2,  total_time2, _, numb_NE3 = NormalGames.All_NE(MyGame,Gurobi.Optimizer,2)
 ```
 
 Compute all Nash equilibria using Formulation 1 of \[[1](#readme-ref1)\] (Big-M formulation), and a branch-and-cut method (use of lazy constraints):
 
 ```julia
 println("Formulation 1 by Sandholm et al. (2005) with callback")
-NE_mixed2_callback, NE_u2_callback,  total_time2_callback, numb_NE3_callback = NormalGames.All_NE(MyGame,"callback 2")
+NE_mixed2_callback, NE_u2_callback,  total_time2_callback, numb_NE3_callback = NormalGames.All_NE(MyGame,Gurobi.Optimizer,"callback 2")
 ```
 
 Compute all Nash equilibria using Porter, Nudelman and Shoham method \[[2](#readme-ref2)\] that can be determined within a 30 second time limit:
 
 ```julia
 println("PNS method restricted to running for 30 seconds")
-time_pns, NE_u_pns,  NE_mixed_pns = NormalGames.NashEquilibriaPNS(MyGame,true,false,true,30)
+time_pns, NE_u_pns,  NE_mixed_pns = NormalGames.NashEquilibriaPNS(MyGame,Gurobi.Optimizer,true,false,true,30)
 ```
 
 The method can also be restricted to computing only all the existent pure Nash equilibria (if any exist) by making the third entry equal to true (not that we removed the time limit but this can also be added as above)
 
 ```julia
 println("PNS method restricted to pure Nash equilibria")
-time_pns, NE_u_pns,  NE_mixed_pns = NormalGames.NashEquilibriaPNS(MyGame,true,true)
+time_pns, NE_u_pns,  NE_mixed_pns = NormalGames.NashEquilibriaPNS(MyGame,Gurobi.Optimizer,true,true)
 ```
 
 It is important to remark that for all the five methods above, a Nash equilibrium may be outputted more than once. This is because we can have a pure strategy that attains the maximum utility but that it is not necessary to achieve an equilibrium (i.e., its probability is zero but the binary variables keeping track of the support are 1). This is the case of MyGame1.json where all methods output 5 equilibria but two of them are the same: one with support [6], [1] and [1] for each of the three players, and another with support [2,6], [1], [1] for each of the three players; in both cases we get a pure equilibrium where player 1 chooses strategy 6, player 2 strategy 1 and player 3 strategy 1.
@@ -122,21 +124,21 @@ Compute one Nash equilibrium using Formulation 2 of \[[1](#readme-ref1)\]
 
 ```julia
 println("Formulation 2 by Sandholm et al. (2005)")
-Regret_val, NE_u3, NE_mixed3 = NormalGames.NashEquilibria3(MyGame)
+Regret_val, NE_u3, NE_mixed3 = NormalGames.NashEquilibria3(MyGame,Gurobi.Optimizer)
 ```
 
 Compute one Nash equilibrium using Formulation 3 of \[[1](#readme-ref1)\]
 
 ```julia
 println("Formulation 3 by Sandholm et al. (2005)")
-Regret_prob_val, NE_u4, NE_mixed4 = NormalGames.NashEquilibria4(MyGame)
+Regret_prob_val, NE_u4, NE_mixed4 = NormalGames.NashEquilibria4(MyGame,Gurobi.Optimizer)
 ```
 
 Compute one Nash equilibrium using Formulation 3 of \[[1](#readme-ref1)\]
 
 ```julia
 println("Formulation 4 by Sandholm et al. (2005)")
-Regret_comb_val, NE_u5, NE_mixed5 = NormalGames.NashEquilibria5(MyGame)
+Regret_comb_val, NE_u5, NE_mixed5 = NormalGames.NashEquilibria5(MyGame,Gurobi.Optimizer)
 ```
 
 Save results:
@@ -166,7 +168,7 @@ for ind in indices
 end
 # note that supp is optional
 SW, CE_mixed, CE_u, CE_time = NormalGames.CorrelatedEquilibria(MyGame,supp)
-SW1, CE_mixed1, CE_u1, CE_time1 = NormalGames.CorrelatedEquilibria(MyGame)
+SW1, CE_mixed1, CE_u1, CE_time1 = NormalGames.CorrelatedEquilibria(MyGame,Gurobi.Optimizer)
 println("CE social welfare is ", SW, " and for the NE is ", [sum(ne) for ne in NE_u2_callback])
 println("The CE with maximum social welfare is ", SW1)
 ```

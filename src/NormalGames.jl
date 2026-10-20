@@ -3,7 +3,7 @@ module NormalGames
 using Random
 using JSON
 
-using JuMP, Gurobi
+using JuMP
 using IterTools
 using Combinatorics
 
